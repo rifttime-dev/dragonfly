@@ -1674,13 +1674,19 @@ func (p *Player) AttackEntity(e world.Entity) bool {
 		critical       = !p.Sprinting() && !p.Flying() && p.FallDistance() > 0 && !slowFalling && !blind
 	)
 
+	i, _ := p.HeldItems()
+	if k, ok := i.Enchantment(enchantment.Knockback); ok {
+		inc := enchantment.Knockback.Force(k.Level())
+		force += inc
+		height += inc
+	}
+
 	ctx := event.C(p)
 	if p.Handler().HandleAttackEntity(ctx, e, &force, &height, &critical); ctx.Cancelled() {
 		return false
 	}
 	p.SwingArm()
 
-	i, _ := p.HeldItems()
 	if !isLiving {
 		return false
 	}
@@ -1717,11 +1723,6 @@ func (p *Player) AttackEntity(e world.Entity) bool {
 
 	p.Exhaust(0.1)
 
-	if k, ok := i.Enchantment(enchantment.Knockback); ok {
-		inc := enchantment.Knockback.Force(k.Level())
-		force += inc
-		height += inc
-	}
 	living.KnockBack(p.Position(), force, height)
 
 	if f, ok := i.Enchantment(enchantment.FireAspect); ok {
